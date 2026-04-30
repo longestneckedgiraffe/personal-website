@@ -1,0 +1,371 @@
+@import "tailwindcss";
+
+html,
+body {
+  min-height: 100%;
+  margin: 0;
+  background: #000;
+}
+
+body {
+  overflow-x: hidden;
+}
+
+body.physics-active {
+  overflow: hidden;
+}
+
+.page-copy {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  max-width: 28rem;
+  min-height: 100vh;
+  margin-left: clamp(1.5rem, 5vw, 4rem);
+  color: #fff;
+  font-family: "Sohne", sans-serif;
+  font-size: 1rem;
+  font-weight: 400;
+  line-height: 1.45;
+}
+
+.page-copy p {
+  margin: 0 0 1rem;
+}
+
+.page-copy p:last-child {
+  margin-bottom: 0;
+}
+
+.page-copy a {
+  color: inherit;
+  text-decoration: none;
+  transition: color 160ms ease;
+}
+
+.page-copy a:hover,
+.page-copy a:focus-visible {
+  color: rgb(255 255 255 / 72%);
+}
+
+.page-copy.is-physics-active {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.smile-trigger {
+  appearance: none;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  font: inherit;
+  transition: color 160ms ease;
+}
+
+.smile-trigger:hover,
+.smile-trigger:focus-visible {
+  color: rgb(255 255 255 / 72%);
+}
+
+.physics-layer {
+  position: fixed;
+  inset: 0;
+  z-index: 10;
+  pointer-events: none;
+}
+
+.physics-hit-area {
+  position: fixed;
+  inset: 0;
+  z-index: 1;
+  cursor: grab;
+  pointer-events: auto;
+}
+
+.physics-hit-area:active {
+  cursor: grabbing;
+}
+
+.physics-word {
+  display: inline-block;
+  white-space: nowrap;
+  will-change: transform;
+}
+
+.physics-clone {
+  position: absolute;
+  left: 0;
+  top: 0;
+  z-index: 2;
+  display: inline-block;
+  pointer-events: none;
+  white-space: nowrap;
+  will-change: transform;
+}
+
+@font-face {
+  font-family: "Input Sans";
+  src: url("/fonts/InputSans-Light.ttf") format("truetype");
+  font-weight: 300;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Sohne";
+  src: url("/fonts/sohne/Sohne-Extraleicht.otf") format("opentype");
+  font-weight: 200;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Sohne";
+  src: url("/fonts/sohne/Sohne-Leicht.otf") format("opentype");
+  font-weight: 300;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Sohne";
+  src: url("/fonts/sohne/Sohne-Buch.otf") format("opentype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Sohne";
+  src: url("/fonts/sohne/Sohne-Kraftig.otf") format("opentype");
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Sohne";
+  src: url("/fonts/sohne/Sohne-Halbfett.otf") format("opentype");
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Sohne";
+  src: url("/fonts/sohne/Sohne-Dreiviertelfett.otf") format("opentype");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Sohne";
+  src: url("/fonts/sohne/Sohne-Fett.otf") format("opentype");
+  font-weight: 800;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Sohne";
+  src: url("/fonts/sohne/Sohne-Extrafett.otf") format("opentype");
+  font-weight: 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Sohne Breit";
+  src: url("/fonts/sohne/SohneBreit-Extraleicht.otf") format("opentype");
+  font-weight: 200;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Sohne Breit";
+  src: url("/fonts/sohne/SohneBreit-Leicht.otf") format("opentype");
+  font-weight: 300;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Sohne Breit";
+  src: url("/fonts/sohne/SohneBreit-Buch.otf") format("opentype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Sohne Breit";
+  src: url("/fonts/sohne/SohneBreit-Kraftig.otf") format("opentype");
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Sohne Breit";
+  src: url("/fonts/sohne/SohneBreit-Halbfett.otf") format("opentype");
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Sohne Breit";
+  src: url("/fonts/sohne/SohneBreit-Dreiviertelfett.otf") format("opentype");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Sohne Breit";
+  src: url("/fonts/sohne/SohneBreit-Fett.otf") format("opentype");
+  font-weight: 800;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Sohne Breit";
+  src: url("/fonts/sohne/SohneBreit-Extrafett.otf") format("opentype");
+  font-weight: 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Sohne Schmal";
+  src: url("/fonts/sohne/SohneSchmal-Extraleicht.otf") format("opentype");
+  font-weight: 200;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Sohne Schmal";
+  src: url("/fonts/sohne/SohneSchmal-Leicht.otf") format("opentype");
+  font-weight: 300;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Sohne Schmal";
+  src: url("/fonts/sohne/SohneSchmal-Buch.otf") format("opentype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Sohne Schmal";
+  src: url("/fonts/sohne/SohneSchmal-Kraftig.otf") format("opentype");
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Sohne Schmal";
+  src: url("/fonts/sohne/SohneSchmal-Halbfett.otf") format("opentype");
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Sohne Schmal";
+  src: url("/fonts/sohne/SohneSchmal-Dreiviertelfett.otf") format("opentype");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Sohne Schmal";
+  src: url("/fonts/sohne/SohneSchmal-Fett.otf") format("opentype");
+  font-weight: 800;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Sohne Schmal";
+  src: url("/fonts/sohne/SohneSchmal-Extrafett.otf") format("opentype");
+  font-weight: 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Sohne Mono";
+  src: url("/fonts/sohne/SohneMono-Extraleicht.otf") format("opentype");
+  font-weight: 200;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Sohne Mono";
+  src: url("/fonts/sohne/SohneMono-Leicht.otf") format("opentype");
+  font-weight: 300;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Sohne Mono";
+  src: url("/fonts/sohne/SohneMono-Buch.otf") format("opentype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Sohne Mono";
+  src: url("/fonts/sohne/SohneMono-Kraftig.otf") format("opentype");
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Sohne Mono";
+  src: url("/fonts/sohne/SohneMono-Halbfett.otf") format("opentype");
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Sohne Mono";
+  src: url("/fonts/sohne/SohneMono-Dreiviertelfett.otf") format("opentype");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Sohne Mono";
+  src: url("/fonts/sohne/SohneMono-Fett.otf") format("opentype");
+  font-weight: 800;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Sohne Mono";
+  src: url("/fonts/sohne/SohneMono-Extrafett.otf") format("opentype");
+  font-weight: 900;
+  font-style: normal;
+  font-display: swap;
+}

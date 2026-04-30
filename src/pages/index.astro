@@ -1,0 +1,188 @@
+---
+import Layout from "../layouts/Layout.astro";
+---
+
+<Layout>
+  <main class="page-copy" data-physics-copy>
+    <p>
+      I’m focused on <a href="https://en.wikipedia.org/wiki/Post-quantum_cryptography" target="_blank" rel="noreferrer">quantum-resistant cryptography</a>,
+      using our modern understanding of <a href="https://en.wikipedia.org/wiki/Quantum_computing" target="_blank" rel="noreferrer">quantum computing</a>
+      to help create a safer, <a href="https://en.wikipedia.org/wiki/Internet_freedom" target="_blank" rel="noreferrer">freer internet</a>.
+    </p>
+
+    <p>
+      In my free time, I <a href="https://en.wikipedia.org/wiki/Reverse_engineering" target="_blank" rel="noreferrer">reverse-engineer</a>
+      <a href="https://en.wikipedia.org/wiki/Cheating_in_online_games#Anti-cheating_methods_and_limitations" target="_blank" rel="noreferrer">anti-cheat systems</a>
+      to understand how to bypass them, primarily by leveraging
+      <a href="https://en.wikipedia.org/wiki/Hyper-V" target="_blank" rel="noreferrer">Microsoft's Hyper-V</a>
+      to access guest OS memory.
+    </p>
+
+    <p>
+      <a href="mailto:contact@ridhwanzaman.me">contact@ridhwanzaman.me</a>
+    </p>
+
+    <p>
+      <button class="smile-trigger" type="button" data-physics-trigger aria-label="Drop the text">:)</button>
+    </p>
+  </main>
+
+  <script>
+    import Matter from "matter-js";
+
+    const copy = document.querySelector("[data-physics-copy]");
+    const trigger = document.querySelector("[data-physics-trigger]");
+    const splitters = ["A", "BUTTON"];
+    let active = false;
+
+    const splitTextNode = (node) => {
+      const fragment = document.createDocumentFragment();
+      const parts = node.textContent?.match(/\S+|\s+/g) ?? [];
+
+      for (const part of parts) {
+        if (/^\s+$/.test(part)) {
+          fragment.append(document.createTextNode(part));
+          continue;
+        }
+
+        const span = document.createElement("span");
+        span.className = "physics-word";
+        span.textContent = part;
+        fragment.append(span);
+      }
+
+      node.replaceWith(fragment);
+    };
+
+    const prepareWords = (root) => {
+      const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
+        acceptNode(node) {
+          return node.textContent?.trim()
+            ? NodeFilter.FILTER_ACCEPT
+            : NodeFilter.FILTER_REJECT;
+        },
+      });
+      const textNodes = [];
+
+      while (walker.nextNode()) {
+        textNodes.push(walker.currentNode);
+      }
+
+      textNodes.forEach(splitTextNode);
+
+      root.querySelectorAll(splitters.join(",")).forEach((element) => {
+        if (element.querySelector(".physics-word")) return;
+
+        element.classList.add("physics-word");
+      });
+    };
+
+    const activatePhysics = () => {
+      if (!copy || active) return;
+
+      active = true;
+      prepareWords(copy);
+
+      const engine = Matter.Engine.create();
+      const runner = Matter.Runner.create();
+      const wordElements = Array.from(copy.querySelectorAll(".physics-word"));
+      const physicsLayer = document.createElement("div");
+      const hitArea = document.createElement("div");
+      const bodies = [];
+      const viewportWidth = window.innerWidth;
+      const viewportHeight = window.innerHeight;
+      const floor = Matter.Bodies.rectangle(
+        viewportWidth / 2,
+        viewportHeight + 40,
+        viewportWidth * 2,
+        80,
+        { isStatic: true },
+      );
+      const leftWall = Matter.Bodies.rectangle(-40, viewportHeight / 2, 80, viewportHeight * 2, {
+        isStatic: true,
+      });
+      const rightWall = Matter.Bodies.rectangle(
+        viewportWidth + 40,
+        viewportHeight / 2,
+        80,
+        viewportHeight * 2,
+        { isStatic: true },
+      );
+
+      physicsLayer.className = "physics-layer";
+      hitArea.className = "physics-hit-area";
+      physicsLayer.append(hitArea);
+      document.body.append(physicsLayer);
+
+      wordElements.forEach((element) => {
+        const rect = element.getBoundingClientRect();
+        const styles = getComputedStyle(element);
+        const clone = document.createElement("span");
+        const body = Matter.Bodies.rectangle(
+          rect.left + rect.width / 2,
+          rect.top + rect.height / 2,
+          rect.width,
+          rect.height,
+          {
+            friction: 0.45,
+            frictionAir: 0.015,
+            restitution: 0.35,
+          },
+        );
+
+        clone.className = "physics-clone";
+        clone.textContent = element.textContent;
+        clone.style.color = styles.color;
+        clone.style.fontFamily = styles.fontFamily;
+        clone.style.fontSize = styles.fontSize;
+        clone.style.fontStyle = styles.fontStyle;
+        clone.style.fontWeight = styles.fontWeight;
+        clone.style.letterSpacing = styles.letterSpacing;
+        clone.style.lineHeight = styles.lineHeight;
+        clone.style.width = `${rect.width}px`;
+        clone.style.height = `${rect.height}px`;
+        clone.style.transform = `translate3d(${rect.left}px, ${rect.top}px, 0)`;
+        physicsLayer.append(clone);
+
+        bodies.push({ body, element: clone, width: rect.width, height: rect.height });
+      });
+
+      const mouse = Matter.Mouse.create(hitArea);
+      const mouseConstraint = Matter.MouseConstraint.create(engine, {
+        mouse,
+        constraint: {
+          stiffness: 0.24,
+          damping: 0.06,
+          render: { visible: false },
+        },
+      });
+
+      Matter.Composite.add(engine.world, [
+        floor,
+        leftWall,
+        rightWall,
+        mouseConstraint,
+        ...bodies.map(({ body }) => body),
+      ]);
+
+      copy.classList.add("is-physics-active");
+      document.body.classList.add("physics-active");
+      hitArea.addEventListener("wheel", (event) => event.preventDefault(), { passive: false });
+      Matter.Runner.run(runner, engine);
+
+      const update = () => {
+        bodies.forEach(({ body, element, width, height }) => {
+          element.style.transform = `translate3d(${body.position.x - width / 2}px, ${
+            body.position.y - height / 2
+          }px, 0) rotate(${body.angle}rad)`;
+        });
+
+        requestAnimationFrame(update);
+      };
+
+      requestAnimationFrame(update);
+    };
+
+    trigger?.addEventListener("click", activatePhysics);
+  </script>
+</Layout>
