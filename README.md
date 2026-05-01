@@ -1,10 +1,6 @@
-# crepe
+# personal-website
 
-Crepe is the name of my blog website, see code changes in this repo
-
-## Why crepes?
-
-Because they're delicious. (I mean [look](https://stock.adobe.com/search?k=crepes) at them)
+This is my personal portfolio website.
 
 ## License
 
