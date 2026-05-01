@@ -96,17 +96,18 @@ import Layout from "../layouts/Layout.astro";
         viewportHeight + 40,
         viewportWidth * 2,
         80,
-        { isStatic: true },
+        { isStatic: true, restitution: 1 },
       );
       const leftWall = Matter.Bodies.rectangle(-40, viewportHeight / 2, 80, viewportHeight * 2, {
         isStatic: true,
+        restitution: 1,
       });
       const rightWall = Matter.Bodies.rectangle(
         viewportWidth + 40,
         viewportHeight / 2,
         80,
         viewportHeight * 2,
-        { isStatic: true },
+        { isStatic: true, restitution: 1 },
       );
 
       physicsLayer.className = "physics-layer";
@@ -124,9 +125,9 @@ import Layout from "../layouts/Layout.astro";
           rect.width,
           rect.height,
           {
-            friction: 0.45,
-            frictionAir: 0.015,
-            restitution: 0.35,
+            friction: 0.08,
+            frictionAir: 0.004,
+            restitution: 0.92,
           },
         );
 

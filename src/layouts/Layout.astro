@@ -14,6 +14,12 @@ import "../styles/global.css";
     <link rel="apple-touch-icon" sizes="180x180" href="/favicon/apple-touch-icon.png" />
   </head>
   <body>
+    <div class="site-background" aria-hidden="true">
+      <video class="site-background-video" autoplay muted loop playsinline preload="auto">
+        <source src="/media/light-leaks.mp4" type="video/mp4" />
+      </video>
+    </div>
     <slot />
+    <footer class="site-footer">© 2026 Ridhwan Zaman</footer>
   </body>
 </html>

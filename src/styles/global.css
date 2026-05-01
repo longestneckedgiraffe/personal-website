@@ -8,14 +8,46 @@ body {
 }
 
 body {
+  position: relative;
   overflow-x: hidden;
+  isolation: isolate;
 }
 
 body.physics-active {
   overflow: hidden;
 }
 
+.site-background {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+  background: #000;
+}
+
+.site-background::after {
+  position: absolute;
+  inset: 0;
+  content: "";
+  background:
+    radial-gradient(circle at 18% 34%, rgb(255 255 255 / 10%), transparent 26rem),
+    linear-gradient(90deg, rgb(0 0 0 / 44%), rgb(0 0 0 / 68%));
+}
+
+.site-background-video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0;
+  filter: blur(10px) saturate(1.2) contrast(1.08);
+  transform: scale(1.045);
+  animation: background-video-fade 1800ms ease-out 180ms forwards;
+}
+
 .page-copy {
+  position: relative;
+  z-index: 1;
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -27,6 +59,31 @@ body.physics-active {
   font-size: 1rem;
   font-weight: 400;
   line-height: 1.45;
+}
+
+.site-footer {
+  position: fixed;
+  right: 1.5rem;
+  bottom: 1.25rem;
+  left: 1.5rem;
+  z-index: 1;
+  color: rgb(255 255 255 / 72%);
+  font-family: "Sohne", sans-serif;
+  font-size: 0.875rem;
+  font-weight: 400;
+  line-height: 1.45;
+  text-align: center;
+  pointer-events: none;
+}
+
+@keyframes background-video-fade {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 0.56;
+  }
 }
 
 .page-copy p {
