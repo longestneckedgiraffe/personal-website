@@ -3,10 +3,54 @@ import Layout from "../layouts/Layout.astro";
 ---
 
 <Layout>
-  <main class="page-copy">
-    <a class="home-email" href="mailto:contact@ridhwanzaman.me" aria-label="contact at ridhwanzaman dot me"
-      >contact[at]ridhwanzaman.me</a
-    >
-    <a class="home-blog" href="/blog">my blog</a>
+  <main class="page-shell">
+    <div class="page-copy">
+      <a class="home-email" href="mailto:contact@ridhwanzaman.me" aria-label="contact at ridhwanzaman dot me"
+        >contact[at]ridhwanzaman.me</a
+      >
+      <a class="home-blog" href="/blog">my blog</a>
+    </div>
+    <div class="square-grid" id="square-grid" aria-hidden="true"></div>
   </main>
+
+  <script is:inline>
+    const GAP = 10;
+    const TARGET = 96;
+    const grid = document.getElementById("square-grid");
+
+    function layout() {
+      const W = grid.clientWidth;
+      const H = grid.clientHeight;
+      if (W <= 0 || H <= 0) return;
+
+      const cols = Math.max(1, Math.round((W + GAP) / (TARGET + GAP)));
+      const square = (W - (cols - 1) * GAP) / cols;
+
+      let rows = Math.max(1, Math.round((H + GAP) / (square + GAP)));
+      let rowGap = rows > 1 ? (H - rows * square) / (rows - 1) : GAP;
+      if (rowGap < 0 && rows > 1) {
+        rows -= 1;
+        rowGap = rows > 1 ? (H - rows * square) / (rows - 1) : GAP;
+      }
+
+      grid.style.gridTemplateColumns = `repeat(${cols}, ${square}px)`;
+      grid.style.gridTemplateRows = `repeat(${rows}, ${square}px)`;
+      grid.style.columnGap = `${GAP}px`;
+      grid.style.rowGap = `${rowGap}px`;
+
+      const total = cols * rows;
+      if (grid.childElementCount !== total) {
+        const frag = document.createDocumentFragment();
+        for (let i = 0; i < total; i += 1) {
+          const cell = document.createElement("span");
+          cell.className = "square-grid__cell";
+          frag.appendChild(cell);
+        }
+        grid.replaceChildren(frag);
+      }
+    }
+
+    requestAnimationFrame(layout);
+    addEventListener("resize", layout);
+  </script>
 </Layout>
