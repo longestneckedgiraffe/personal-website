@@ -18,6 +18,32 @@ import Layout from "../layouts/Layout.astro";
     const TARGET = 96;
     const grid = document.getElementById("square-grid");
 
+    const H = 560;
+    const NORM = 50;
+    const DEPTH = 20;
+    const DIM = 0.16;
+    const EASE = 0.18;
+    const SIGN_X = -1;
+    const SIGN_Y = 1;
+    const DEG = 180 / Math.PI;
+
+    let cells = [];
+    let relX = new Float32Array(0);
+    let relY = new Float32Array(0);
+    let rotX = new Float32Array(0);
+    let rotY = new Float32Array(0);
+
+    let pointerX = 0;
+    let pointerY = 0;
+    let energy = 0;
+    let running = false;
+    let rectLeft = 0;
+    let rectTop = 0;
+
+    const reduce =
+      window.matchMedia &&
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
     function layout() {
       const W = grid.clientWidth;
       const H = grid.clientHeight;
@@ -48,9 +74,98 @@ import Layout from "../layouts/Layout.astro";
         }
         grid.replaceChildren(frag);
       }
+
+      cells = Array.from(grid.children);
+      relX = new Float32Array(total);
+      relY = new Float32Array(total);
+      rotX = new Float32Array(total);
+      rotY = new Float32Array(total);
+
+      for (let i = 0; i < total; i += 1) {
+        const col = i % cols;
+        const row = Math.floor(i / cols);
+        relX[i] = col * (square + GAP) + square / 2;
+        relY[i] = row * (square + rowGap) + square / 2;
+      }
     }
 
+    function tick() {
+      if (cells.length === 0) {
+        running = false;
+        return;
+      }
+
+      const rect = grid.getBoundingClientRect();
+      rectLeft = rect.left;
+      rectTop = rect.top;
+
+      let moving = false;
+
+      for (let i = 0; i < cells.length; i += 1) {
+        const cx = rectLeft + relX[i];
+        const cy = rectTop + relY[i];
+        const dx = pointerX - cx;
+        const dy = pointerY - cy;
+
+        const tx = SIGN_X * Math.atan2(dy, Math.hypot(dx, H)) * DEG * energy;
+        const ty = SIGN_Y * Math.atan2(dx, H) * DEG * energy;
+
+        rotX[i] += (tx - rotX[i]) * EASE;
+        rotY[i] += (ty - rotY[i]) * EASE;
+
+        if (Math.abs(tx - rotX[i]) > 0.01 || Math.abs(ty - rotY[i]) > 0.01) {
+          moving = true;
+        }
+
+        const lean = Math.min(1, Math.hypot(rotX[i], rotY[i]) / NORM);
+        const z = -DEPTH * lean;
+        cells[i].style.transform =
+          "rotateX(" +
+          rotX[i].toFixed(2) +
+          "deg) rotateY(" +
+          rotY[i].toFixed(2) +
+          "deg) translateZ(" +
+          z.toFixed(1) +
+          "px)";
+        cells[i].style.opacity = (1 - DIM * lean).toFixed(3);
+      }
+
+      if (moving || energy > 0.001) {
+        requestAnimationFrame(tick);
+      } else {
+        running = false;
+      }
+    }
+
+    function wake() {
+      if (reduce) return;
+      if (!running) {
+        running = true;
+        requestAnimationFrame(tick);
+      }
+    }
+
+    function onMove(e) {
+      pointerX = e.clientX;
+      pointerY = e.clientY;
+      energy = 1;
+      wake();
+    }
+
+    function onLeave() {
+      energy = 0;
+      wake();
+    }
+
+    layout();
     requestAnimationFrame(layout);
+    addEventListener("load", layout);
     addEventListener("resize", layout);
+
+    if (!reduce) {
+      addEventListener("pointermove", onMove, { passive: true });
+      document.addEventListener("pointerleave", onLeave);
+      addEventListener("blur", onLeave);
+    }
   </script>
 </Layout>
