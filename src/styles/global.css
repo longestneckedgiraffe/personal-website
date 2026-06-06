@@ -14,12 +14,36 @@ body {
 }
 
 .page-shell {
+  --shell-pad: clamp(1.5rem, 5vw, 4rem);
+  position: relative;
   display: flex;
   align-items: stretch;
-  gap: clamp(1.5rem, 5vw, 4rem);
+  gap: var(--shell-pad);
   box-sizing: border-box;
   min-height: 100vh;
-  padding: clamp(1.5rem, 5vw, 4rem);
+  padding: var(--shell-pad);
+}
+
+.home-social {
+  position: absolute;
+  left: var(--shell-pad);
+  bottom: var(--shell-pad);
+  z-index: 1;
+  display: inline-flex;
+  color: #fff;
+  transition: color 160ms ease;
+}
+
+.home-social:hover,
+.home-social:focus-visible {
+  color: rgb(255 255 255 / 72%);
+}
+
+.home-social svg {
+  display: block;
+  width: 1.75rem;
+  height: 1.75rem;
+  fill: currentColor;
 }
 
 .page-copy {

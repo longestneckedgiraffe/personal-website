@@ -1,5 +1,6 @@
 ---
 import Layout from "../layouts/Layout.astro";
+import { Icon } from "astro-icon/components";
 ---
 
 <Layout>
@@ -11,6 +12,15 @@ import Layout from "../layouts/Layout.astro";
       <a class="home-blog" href="/blog">my blog</a>
     </div>
     <div class="square-grid" id="square-grid" aria-hidden="true"></div>
+    <a
+      class="home-social"
+      href="https://github.com/longestneckedgiraffe"
+      target="_blank"
+      rel="noopener noreferrer"
+      aria-label="GitHub"
+    >
+      <Icon name="simple-icons:github" />
+    </a>
   </main>
 
   <script is:inline>
