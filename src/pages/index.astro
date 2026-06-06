@@ -24,6 +24,8 @@ import Layout from "../layouts/Layout.astro";
     const DEPTH = 9;
     const DIM = 0.08;
     const EASE = 0.18;
+    const RESET_STAGGER = 14;
+    const RESET_DURATION = 360;
     const SIGN_X = -1;
     const SIGN_Y = 1;
     const DEG = 180 / Math.PI;
@@ -33,10 +35,13 @@ import Layout from "../layouts/Layout.astro";
     let relY = new Float32Array(0);
     let rotX = new Float32Array(0);
     let rotY = new Float32Array(0);
+    let rotX0 = new Float32Array(0);
+    let rotY0 = new Float32Array(0);
 
     let pointerX = 0;
     let pointerY = 0;
-    let energy = 0;
+    let resetting = false;
+    let resetStart = -1;
     let running = false;
     let rectLeft = 0;
     let rectTop = 0;
@@ -81,6 +86,8 @@ import Layout from "../layouts/Layout.astro";
       relY = new Float32Array(total);
       rotX = new Float32Array(total);
       rotY = new Float32Array(total);
+      rotX0 = new Float32Array(total);
+      rotY0 = new Float32Array(total);
 
       for (let i = 0; i < total; i += 1) {
         const col = i % cols;
@@ -90,7 +97,7 @@ import Layout from "../layouts/Layout.astro";
       }
     }
 
-    function tick() {
+    function tick(now) {
       if (cells.length === 0) {
         running = false;
         return;
@@ -100,30 +107,55 @@ import Layout from "../layouts/Layout.astro";
       rectLeft = rect.left;
       rectTop = rect.top;
 
-      let moving = false;
+      if (resetting && resetStart < 0) {
+        resetStart = now;
+        for (let i = 0; i < cells.length; i += 1) {
+          rotX0[i] = rotX[i];
+          rotY0[i] = rotY[i];
+        }
+      }
+      const elapsed = resetting ? now - resetStart : 0;
+
+      let active = false;
 
       for (let i = 0; i < cells.length; i += 1) {
-        const cx = rectLeft + relX[i];
-        const cy = rectTop + relY[i];
-        const dx = pointerX - cx;
-        const dy = pointerY - cy;
+        if (resetting) {
+          const t = (elapsed - i * RESET_STAGGER) / RESET_DURATION;
+          if (t <= 0) {
+            rotX[i] = rotX0[i];
+            rotY[i] = rotY0[i];
+            active = true;
+          } else if (t < 1) {
+            const u = 1 - t;
+            const k = u * u * u;
+            rotX[i] = rotX0[i] * k;
+            rotY[i] = rotY0[i] * k;
+            active = true;
+          } else {
+            rotX[i] = 0;
+            rotY[i] = 0;
+          }
+        } else {
+          const cx = rectLeft + relX[i];
+          const cy = rectTop + relY[i];
+          const dx = pointerX - cx;
+          const dy = pointerY - cy;
 
-        let tx = SIGN_X * Math.atan2(dy, Math.hypot(dx, H)) * DEG * STRENGTH;
-        let ty = SIGN_Y * Math.atan2(dx, H) * DEG * STRENGTH;
-        const m = Math.hypot(tx, ty);
-        if (m > MAX_DEG) {
-          const s = MAX_DEG / m;
-          tx *= s;
-          ty *= s;
-        }
-        tx *= energy;
-        ty *= energy;
+          let tx = SIGN_X * Math.atan2(dy, Math.hypot(dx, H)) * DEG * STRENGTH;
+          let ty = SIGN_Y * Math.atan2(dx, H) * DEG * STRENGTH;
+          const m = Math.hypot(tx, ty);
+          if (m > MAX_DEG) {
+            const s = MAX_DEG / m;
+            tx *= s;
+            ty *= s;
+          }
 
-        rotX[i] += (tx - rotX[i]) * EASE;
-        rotY[i] += (ty - rotY[i]) * EASE;
+          rotX[i] += (tx - rotX[i]) * EASE;
+          rotY[i] += (ty - rotY[i]) * EASE;
 
-        if (Math.abs(tx - rotX[i]) > 0.01 || Math.abs(ty - rotY[i]) > 0.01) {
-          moving = true;
+          if (Math.abs(tx - rotX[i]) > 0.01 || Math.abs(ty - rotY[i]) > 0.01) {
+            active = true;
+          }
         }
 
         const lean = Math.min(1, Math.hypot(rotX[i], rotY[i]) / MAX_DEG);
@@ -139,7 +171,12 @@ import Layout from "../layouts/Layout.astro";
         cells[i].style.opacity = (1 - DIM * lean).toFixed(3);
       }
 
-      if (moving || energy > 0.001) {
+      if (resetting && !active) {
+        resetting = false;
+        resetStart = -1;
+      }
+
+      if (active) {
         requestAnimationFrame(tick);
       } else {
         running = false;
@@ -157,12 +194,14 @@ import Layout from "../layouts/Layout.astro";
     function onMove(e) {
       pointerX = e.clientX;
       pointerY = e.clientY;
-      energy = 1;
+      resetting = false;
+      resetStart = -1;
       wake();
     }
 
     function onLeave() {
-      energy = 0;
+      resetting = true;
+      resetStart = -1;
       wake();
     }
 
