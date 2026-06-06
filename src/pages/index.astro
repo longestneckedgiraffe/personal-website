@@ -18,10 +18,11 @@ import Layout from "../layouts/Layout.astro";
     const TARGET = 96;
     const grid = document.getElementById("square-grid");
 
-    const H = 560;
-    const NORM = 50;
-    const DEPTH = 20;
-    const DIM = 0.16;
+    const H = 680;
+    const STRENGTH = 0.32;
+    const MAX_DEG = 9;
+    const DEPTH = 9;
+    const DIM = 0.08;
     const EASE = 0.18;
     const SIGN_X = -1;
     const SIGN_Y = 1;
@@ -107,8 +108,16 @@ import Layout from "../layouts/Layout.astro";
         const dx = pointerX - cx;
         const dy = pointerY - cy;
 
-        const tx = SIGN_X * Math.atan2(dy, Math.hypot(dx, H)) * DEG * energy;
-        const ty = SIGN_Y * Math.atan2(dx, H) * DEG * energy;
+        let tx = SIGN_X * Math.atan2(dy, Math.hypot(dx, H)) * DEG * STRENGTH;
+        let ty = SIGN_Y * Math.atan2(dx, H) * DEG * STRENGTH;
+        const m = Math.hypot(tx, ty);
+        if (m > MAX_DEG) {
+          const s = MAX_DEG / m;
+          tx *= s;
+          ty *= s;
+        }
+        tx *= energy;
+        ty *= energy;
 
         rotX[i] += (tx - rotX[i]) * EASE;
         rotY[i] += (ty - rotY[i]) * EASE;
@@ -117,7 +126,7 @@ import Layout from "../layouts/Layout.astro";
           moving = true;
         }
 
-        const lean = Math.min(1, Math.hypot(rotX[i], rotY[i]) / NORM);
+        const lean = Math.min(1, Math.hypot(rotX[i], rotY[i]) / MAX_DEG);
         const z = -DEPTH * lean;
         cells[i].style.transform =
           "rotateX(" +
