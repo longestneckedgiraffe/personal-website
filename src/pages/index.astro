@@ -39,6 +39,7 @@ import { Icon } from "astro-icon/components";
     const SIGN_X = -1;
     const SIGN_Y = 1;
     const DEG = 180 / Math.PI;
+    const TILT_SCALE = 22;
 
     let cells = [];
     let relX = new Float32Array(0);
@@ -68,11 +69,21 @@ import { Icon } from "astro-icon/components";
       const cols = Math.max(1, Math.round((W + GAP) / (TARGET + GAP)));
       const square = (W - (cols - 1) * GAP) / cols;
 
-      let rows = Math.max(1, Math.round((H + GAP) / (square + GAP)));
-      let rowGap = rows > 1 ? (H - rows * square) / (rows - 1) : GAP;
-      if (rowGap < 0 && rows > 1) {
-        rows -= 1;
+      const mobile =
+        window.matchMedia && window.matchMedia("(max-width: 700px)").matches;
+
+      let rows;
+      let rowGap;
+      if (mobile) {
+        rows = Math.max(1, Math.floor((H + GAP) / (square + GAP)));
+        rowGap = GAP;
+      } else {
+        rows = Math.max(1, Math.round((H + GAP) / (square + GAP)));
         rowGap = rows > 1 ? (H - rows * square) / (rows - 1) : GAP;
+        if (rowGap < 0 && rows > 1) {
+          rows -= 1;
+          rowGap = rows > 1 ? (H - rows * square) / (rows - 1) : GAP;
+        }
       }
 
       grid.style.gridTemplateColumns = `repeat(${cols}, ${square}px)`;
@@ -215,15 +226,92 @@ import { Icon } from "astro-icon/components";
       wake();
     }
 
+    function clampVal(v, lo, hi) {
+      return v < lo ? lo : v > hi ? hi : v;
+    }
+
+    let baseBeta = null;
+    let baseGamma = null;
+
+    function onOrient(e) {
+      if (e.gamma == null || e.beta == null) return;
+      const rect = grid.getBoundingClientRect();
+      if (rect.width === 0 || rect.height === 0) return;
+      if (baseGamma == null) {
+        baseGamma = e.gamma;
+        baseBeta = e.beta;
+      }
+      const dGamma = e.gamma - baseGamma;
+      const dBeta = e.beta - baseBeta;
+      const rangeX = rect.width * 1.1;
+      const rangeY = rect.height * 1.1;
+      pointerX =
+        rect.left + rect.width / 2 + clampVal(dGamma * TILT_SCALE, -rangeX, rangeX);
+      pointerY =
+        rect.top + rect.height / 2 + clampVal(dBeta * TILT_SCALE, -rangeY, rangeY);
+      resetting = false;
+      wake();
+    }
+
+    function startOrient() {
+      baseBeta = null;
+      baseGamma = null;
+      addEventListener("deviceorientation", onOrient, { passive: true });
+      addEventListener("orientationchange", () => {
+        baseBeta = null;
+        baseGamma = null;
+      });
+    }
+
+    function makeHint() {
+      const hint = document.createElement("p");
+      hint.className = "tilt-hint";
+      hint.textContent = "tap to tilt";
+      hint.setAttribute("aria-hidden", "true");
+      const r = grid.getBoundingClientRect();
+      hint.style.left = r.left + r.width / 2 + "px";
+      hint.style.top = r.top + r.height / 2 + "px";
+      document.body.appendChild(hint);
+      return hint;
+    }
+
+    function setupTilt() {
+      const DOE = window.DeviceOrientationEvent;
+      if (!DOE) return;
+      if (typeof DOE.requestPermission === "function") {
+        const hint = makeHint();
+        const onTap = () => {
+          DOE.requestPermission()
+            .then((res) => {
+              if (res === "granted") startOrient();
+            })
+            .catch(() => {})
+            .finally(() => {
+              hint.remove();
+              grid.removeEventListener("click", onTap);
+            });
+        };
+        grid.addEventListener("click", onTap);
+      } else {
+        startOrient();
+      }
+    }
+
     layout();
     requestAnimationFrame(layout);
     addEventListener("load", layout);
     addEventListener("resize", layout);
 
     if (!reduce) {
-      addEventListener("pointermove", onMove, { passive: true });
-      document.addEventListener("pointerleave", onLeave);
-      addEventListener("blur", onLeave);
+      const coarse =
+        window.matchMedia && window.matchMedia("(hover: none)").matches;
+      if (coarse) {
+        setupTilt();
+      } else {
+        addEventListener("pointermove", onMove, { passive: true });
+        document.addEventListener("pointerleave", onLeave);
+        addEventListener("blur", onLeave);
+      }
     }
   </script>
 </Layout>
