@@ -1,229 +1,86 @@
 ---
 import Layout from "../layouts/Layout.astro";
-import { Icon } from "astro-icon/components";
 ---
 
-<Layout>
-  <main class="page-shell">
-    <div class="page-copy">
-      <a class="home-email" href="mailto:contact@ridhwanzaman.me" aria-label="contact at ridhwanzaman dot me"
-        >contact[at]ridhwanzaman.me</a
-      >
-      <a class="home-blog" href="/blog">my blog</a>
-    </div>
-    <div class="square-grid" id="square-grid" aria-hidden="true"></div>
-    <a
-      class="home-social"
-      href="https://github.com/longestneckedgiraffe"
-      target="_blank"
-      rel="noopener noreferrer"
-      aria-label="GitHub"
-    >
-      <Icon name="simple-icons:github" />
-    </a>
+<Layout
+  title="Ridhwan Zaman"
+  description="Personal site of Ridhwan Zaman — work in progress."
+>
+  <main class="wip">
+    <p class="wip-text">Work in progress ...</p>
+    <img
+      id="bubble"
+      class="wip-bubble"
+      src="/bubbles.png"
+      alt=""
+      aria-hidden="true"
+      width="120"
+      height="120"
+    />
   </main>
 
   <script is:inline>
-    const GAP = 10;
-    const TARGET = 96;
-    const grid = document.getElementById("square-grid");
-
-    const H = 680;
-    const STRENGTH = 0.32;
-    const MAX_DEG = 9;
-    const DEPTH = 9;
-    const DIM = 0.08;
-    const EASE = 0.18;
-    const RESET_STAGGER = 14;
-    const RESET_DURATION = 360;
-    const SIGN_X = -1;
-    const SIGN_Y = 1;
-    const DEG = 180 / Math.PI;
-
-    let cells = [];
-    let relX = new Float32Array(0);
-    let relY = new Float32Array(0);
-    let rotX = new Float32Array(0);
-    let rotY = new Float32Array(0);
-    let rotX0 = new Float32Array(0);
-    let rotY0 = new Float32Array(0);
-
-    let pointerX = 0;
-    let pointerY = 0;
-    let resetting = false;
-    let resetStart = -1;
-    let running = false;
-    let rectLeft = 0;
-    let rectTop = 0;
-
+    const bubble = document.getElementById("bubble");
     const reduce =
       window.matchMedia &&
       window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-    function layout() {
-      const W = grid.clientWidth;
-      const H = grid.clientHeight;
-      if (W <= 0 || H <= 0) return;
+    const SPEED = 0.12;
+    let x = 0;
+    let y = 0;
+    let vx = SPEED;
+    let vy = SPEED;
+    let w = 0;
+    let h = 0;
+    let last = 0;
 
-      const cols = Math.max(1, Math.round((W + GAP) / (TARGET + GAP)));
-      const square = (W - (cols - 1) * GAP) / cols;
-
-      let rows = Math.max(1, Math.round((H + GAP) / (square + GAP)));
-      let rowGap = rows > 1 ? (H - rows * square) / (rows - 1) : GAP;
-      if (rowGap < 0 && rows > 1) {
-        rows -= 1;
-        rowGap = rows > 1 ? (H - rows * square) / (rows - 1) : GAP;
-      }
-
-      grid.style.gridTemplateColumns = `repeat(${cols}, ${square}px)`;
-      grid.style.gridTemplateRows = `repeat(${rows}, ${square}px)`;
-      grid.style.columnGap = `${GAP}px`;
-      grid.style.rowGap = `${rowGap}px`;
-
-      const total = cols * rows;
-      if (grid.childElementCount !== total) {
-        const frag = document.createDocumentFragment();
-        for (let i = 0; i < total; i += 1) {
-          const cell = document.createElement("span");
-          cell.className = "square-grid__cell";
-          frag.appendChild(cell);
-        }
-        grid.replaceChildren(frag);
-      }
-
-      cells = Array.from(grid.children);
-      relX = new Float32Array(total);
-      relY = new Float32Array(total);
-      rotX = new Float32Array(total);
-      rotY = new Float32Array(total);
-      rotX0 = new Float32Array(total);
-      rotY0 = new Float32Array(total);
-
-      for (let i = 0; i < total; i += 1) {
-        const col = i % cols;
-        const row = Math.floor(i / cols);
-        relX[i] = col * (square + GAP) + square / 2;
-        relY[i] = row * (square + rowGap) + square / 2;
-      }
+    function bounds() {
+      w = bubble.offsetWidth;
+      h = bubble.offsetHeight;
+      x = Math.min(x, window.innerWidth - w);
+      y = Math.min(y, window.innerHeight - h);
     }
 
-    function tick(now) {
-      if (cells.length === 0) {
-        running = false;
-        return;
+    function frame(now) {
+      const dt = last ? now - last : 16;
+      last = now;
+
+      const maxX = window.innerWidth - w;
+      const maxY = window.innerHeight - h;
+
+      x += vx * dt;
+      y += vy * dt;
+
+      if (x <= 0) {
+        x = 0;
+        vx = Math.abs(vx);
+      } else if (x >= maxX) {
+        x = maxX;
+        vx = -Math.abs(vx);
       }
 
-      const rect = grid.getBoundingClientRect();
-      rectLeft = rect.left;
-      rectTop = rect.top;
-
-      if (resetting && resetStart < 0) {
-        resetStart = now;
-        for (let i = 0; i < cells.length; i += 1) {
-          rotX0[i] = rotX[i];
-          rotY0[i] = rotY[i];
-        }
-      }
-      const elapsed = resetting ? now - resetStart : 0;
-
-      let active = false;
-
-      for (let i = 0; i < cells.length; i += 1) {
-        if (resetting) {
-          const t = (elapsed - i * RESET_STAGGER) / RESET_DURATION;
-          if (t <= 0) {
-            rotX[i] = rotX0[i];
-            rotY[i] = rotY0[i];
-            active = true;
-          } else if (t < 1) {
-            const u = 1 - t;
-            const k = u * u * u;
-            rotX[i] = rotX0[i] * k;
-            rotY[i] = rotY0[i] * k;
-            active = true;
-          } else {
-            rotX[i] = 0;
-            rotY[i] = 0;
-          }
-        } else {
-          const cx = rectLeft + relX[i];
-          const cy = rectTop + relY[i];
-          const dx = pointerX - cx;
-          const dy = pointerY - cy;
-
-          let tx = SIGN_X * Math.atan2(dy, Math.hypot(dx, H)) * DEG * STRENGTH;
-          let ty = SIGN_Y * Math.atan2(dx, H) * DEG * STRENGTH;
-          const m = Math.hypot(tx, ty);
-          if (m > MAX_DEG) {
-            const s = MAX_DEG / m;
-            tx *= s;
-            ty *= s;
-          }
-
-          rotX[i] += (tx - rotX[i]) * EASE;
-          rotY[i] += (ty - rotY[i]) * EASE;
-
-          if (Math.abs(tx - rotX[i]) > 0.01 || Math.abs(ty - rotY[i]) > 0.01) {
-            active = true;
-          }
-        }
-
-        const lean = Math.min(1, Math.hypot(rotX[i], rotY[i]) / MAX_DEG);
-        const z = -DEPTH * lean;
-        cells[i].style.transform =
-          "rotateX(" +
-          rotX[i].toFixed(2) +
-          "deg) rotateY(" +
-          rotY[i].toFixed(2) +
-          "deg) translateZ(" +
-          z.toFixed(1) +
-          "px)";
-        cells[i].style.opacity = (1 - DIM * lean).toFixed(3);
+      if (y <= 0) {
+        y = 0;
+        vy = Math.abs(vy);
+      } else if (y >= maxY) {
+        y = maxY;
+        vy = -Math.abs(vy);
       }
 
-      if (resetting && !active) {
-        resetting = false;
-        resetStart = -1;
-      }
-
-      if (active) {
-        requestAnimationFrame(tick);
-      } else {
-        running = false;
-      }
+      bubble.style.transform = `translate(${x}px, ${y}px)`;
+      requestAnimationFrame(frame);
     }
 
-    function wake() {
-      if (reduce) return;
-      if (!running) {
-        running = true;
-        requestAnimationFrame(tick);
-      }
+    function start() {
+      bounds();
+      x = (window.innerWidth - w) * 0.5;
+      y = (window.innerHeight - h) * 0.5;
+      bubble.style.transform = `translate(${x}px, ${y}px)`;
+      if (!reduce) requestAnimationFrame(frame);
     }
 
-    function onMove(e) {
-      pointerX = e.clientX;
-      pointerY = e.clientY;
-      resetting = false;
-      resetStart = -1;
-      wake();
-    }
-
-    function onLeave() {
-      resetting = true;
-      resetStart = -1;
-      wake();
-    }
-
-    layout();
-    requestAnimationFrame(layout);
-    addEventListener("load", layout);
-    addEventListener("resize", layout);
-
-    if (!reduce) {
-      addEventListener("pointermove", onMove, { passive: true });
-      document.addEventListener("pointerleave", onLeave);
-      addEventListener("blur", onLeave);
-    }
+    addEventListener("resize", bounds);
+    if (bubble.complete) start();
+    else bubble.addEventListener("load", start);
   </script>
 </Layout>

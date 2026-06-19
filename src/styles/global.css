@@ -13,122 +13,32 @@ body {
   isolation: isolate;
 }
 
-.page-shell {
-  --shell-pad: clamp(1.5rem, 5vw, 4rem);
+.wip {
   position: relative;
   display: flex;
-  align-items: stretch;
-  gap: var(--shell-pad);
-  box-sizing: border-box;
-  min-height: 100vh;
-  padding: var(--shell-pad);
-}
-
-.home-social {
-  position: absolute;
-  left: var(--shell-pad);
-  bottom: var(--shell-pad);
-  z-index: 1;
-  display: inline-flex;
-  color: #fff;
-  transition: color 160ms ease;
-}
-
-.home-social:hover,
-.home-social:focus-visible {
-  color: rgb(255 255 255 / 72%);
-}
-
-.home-social svg {
-  display: block;
-  width: 1.75rem;
-  height: 1.75rem;
-  fill: currentColor;
-}
-
-.page-copy {
-  position: relative;
-  z-index: 1;
-  display: flex;
-  flex: 0 0 auto;
-  flex-direction: column;
-  gap: 0.55rem;
+  align-items: center;
   justify-content: center;
-  max-width: min(40rem, 55vw);
+  min-height: 100vh;
+  overflow: hidden;
+}
+
+.wip-text {
+  margin: 0;
   color: #fff;
   font-family: "Sohne", sans-serif;
-  font-weight: 400;
-  line-height: 1;
+  font-weight: 600;
+  font-size: clamp(0.95rem, 2vw, 1.25rem);
+  letter-spacing: -0.04em;
 }
 
-.square-grid {
-  flex: 1 1 auto;
-  align-self: stretch;
-  display: grid;
-  perspective: 820px;
-  perspective-origin: center;
-}
-
-.square-grid__cell {
-  background: #fff;
-  transform-origin: center;
-  backface-visibility: hidden;
-  will-change: transform, opacity;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .square-grid__cell {
-    transform: none !important;
-    opacity: 1 !important;
-  }
-}
-
-.home-email,
-.home-blog {
-  color: inherit;
-  font-family: "Sohne Schmal", "Sohne", sans-serif;
-  font-size: 4.5rem;
-  letter-spacing: 0;
-  text-decoration: none;
-  transition: color 160ms ease;
-}
-
-.home-email {
-  overflow-wrap: anywhere;
-}
-
-.home-email:hover,
-.home-email:focus-visible,
-.home-blog:hover,
-.home-blog:focus-visible {
-  color: rgb(255 255 255 / 72%);
-}
-
-.home-blog {
-  width: fit-content;
-  line-height: 1;
-}
-
-@media (max-width: 700px) {
-  .home-email,
-  .home-blog {
-    font-size: 2.75rem;
-  }
-
-  .square-grid {
-    display: none;
-  }
-
-  .page-copy {
-    max-width: none;
-  }
-}
-
-@media (max-width: 420px) {
-  .home-email,
-  .home-blog {
-    font-size: 2rem;
-  }
+.wip-bubble {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: clamp(72px, 12vw, 120px);
+  height: auto;
+  will-change: transform;
+  pointer-events: none;
 }
 
 @font-face {
