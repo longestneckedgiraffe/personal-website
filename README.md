@@ -1,7 +1,8 @@
-# personal-website
+# React + Tailwind CSS
 
-This is my personal portfolio website.
+Minimal React, TypeScript, Vite, and Tailwind CSS starter.
 
-## License
-
-[MIT](https://opensource.org/license/mit)
+```sh
+npm install
+npm run dev
+```
